@@ -1,1 +1,1 @@
-admin,admin@example.com,5e884898da28047151d0e56f8dc6292773603d0d6aabbdd7385,admin
+admin,admin@example.com,p1234,admin
