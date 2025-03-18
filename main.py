@@ -26,16 +26,16 @@ class RegisterModel(BaseModel):
 
 @app.post("/register")
 def register(user: RegisterModel):
-    # Проверка дали потребителското име съществува
+    # Проверка дали потребителят вече съществува
     with open("users.txt", "r") as f:
         for line in f:
-            if user.username in line:
+            saved_username, _, _, _ = line.strip().split(",")
+            if user.username == saved_username:
                 raise HTTPException(status_code=400, detail="Потребителското име вече съществува!")
 
-    # Запазване в users.txt (хеширане на паролата)
-    hashed_password = hashlib.sha256(user.password.encode()).hexdigest()
+    # 🚨 Запазване на ПЛАН ТЕКСТ паролата (без хеширане)
     with open("users.txt", "a") as f:
-        f.write(f"{user.username},{user.email},{hashed_password},user\n")
+        f.write(f"{user.username},{user.email},{user.password},user\n")
 
     return {"message": "Регистрацията е успешна!", "status": 200}
 
@@ -48,9 +48,19 @@ class LoginModel(BaseModel):
 def login(user: LoginModel):
     with open("users.txt", "r") as f:
         for line in f:
-            saved_username, email, saved_password, role = line.strip().split(",")
-            if user.username == saved_username and hashlib.sha256(user.password.encode()).hexdigest() == saved_password:
-                token = jwt.encode({"sub": user.username, "role": role, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)}, SECRET_KEY, algorithm=ALGORITHM)
+            saved_username, _, saved_password, role = line.strip().split(",")
+
+            # 🚨 Сравнявай ПЛАН ТЕКСТ паролата (без хеширане)
+            if user.username == saved_username and user.password == saved_password:
+                token = jwt.encode(
+                    {
+                        "sub": user.username,
+                        "role": role,
+                        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+                    },
+                    SECRET_KEY,
+                    algorithm=ALGORITHM
+                )
                 return {"token": token}
 
     raise HTTPException(status_code=401, detail="Грешно потребителско име или парола!")
